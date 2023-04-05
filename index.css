@@ -201,3 +201,9 @@ button:focus { outline: 0 }
 .end-emoji{
     font-size: 80px;
 }
+
+/* utility */
+
+.hidden {
+    display: none;
+}

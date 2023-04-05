@@ -1,48 +1,69 @@
-const hero = {
-   elementId: 'hero',
-   name: 'Wizard',
-   avatar: './images/wizard.png',
-   health: 60,
-   diceCount: 3
+import {characterData} from './data.js';
+import {Character} from './character.js';
+
+let monstersArray = ["orc", "demon", "goblin"];
+let isWaiting = false;
+
+const getNewMonster = () => monstersArray.length>0 ? (new Character(characterData[monstersArray.shift()])) : {};
+
+function render() {
+   document.getElementById('hero').innerHTML = wizard.getCharacterHtml();
+   document.getElementById('monster').innerHTML = monster.getCharacterHtml();
 }
 
-const monster = {
-   elementId: 'monster',
-   name: 'Orc',
-   avatar: './images/orc.png',
-   health: 10,
-   diceCount: 1
+document.querySelector('#attack-button').addEventListener('click', attack);
+
+function attack() {
+   if(!isWaiting){
+      wizard.setDiceHtml();
+      monster.setDiceHtml();
+      wizard.takeDamage(monster.currentDiceScore);
+      monster.takeDamage(wizard.currentDiceScore);
+      render();
+      
+      if(wizard.dead){
+         document.querySelector('#attack-button').style.cursor = 'not-allowed';
+         setTimeout(endGame, 1000);
+      }
+      else if(monster.dead){
+         document.querySelector('#attack-button').style.cursor = 'not-allowed';
+         isWaiting = true;
+         if(monstersArray.length > 0){
+            setTimeout(()=>{
+               monster = getNewMonster();
+               render();
+               isWaiting = false;
+            },1500);
+            document.querySelector('#attack-button').style.cursor = 'default';
+         }
+         else{
+            setTimeout(endGame, 1500);
+         }
+      }
+   }
 }
 
-function renderCharacter(data) {
-   const {elementId, name, avatar, health, diceCount} = data;
+function endGame() {
+   isWaiting = true;
+   console.log('The game is over');
 
-   let diceHtml = '';
+   const endMessage = wizard.health === 0 && monster.health === 0 ?
+   "No victors - all creatures are dead" :
+   wizard.health > 0 ? "The Wizard Wins" :
+   "The Monsters are Victorious";
 
+   const endEmoji = wizard.health > 0 ? '🔮' : '☠️';
 
-   diceHtml = getDiceHtml(diceCount);
-   
-   document.getElementById(elementId).innerHTML = `
-   <div class="character-card">
-   <h4 class="name"> ${name} </h4>
-   <img class="avatar" src="${avatar}"/>
-   <p class="health">health: <b> ${health} </b></p>
-   <div class="dice-container">${diceHtml}</div>
-   </div>       
+   document.body.innerHTML = `
+      <div class="end-game">
+         <h2>Game Over</h2>
+         <h3>${endMessage}</h3>
+         <p class="end-emoji">${endEmoji}</p>
+      </div>
    `
 }
 
-function getDiceRollArray(diceCount) {
-   const diceRoll = new Array(diceCount).fill(null).map(function() { return Math.floor(Math.random()*6)+1; });
+const wizard = new Character(characterData.hero);
+let monster = getNewMonster();
 
-   return diceRoll;
-}
-
-function getDiceHtml(diceCount) {
-   return getDiceRollArray(diceCount).map(function(diceValue) {
-      return `<div class="dice">${diceValue}</div>`;
-   }).join('');
-}
-
-renderCharacter(hero);
-renderCharacter(monster);
+render();
